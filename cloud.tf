@@ -1,9 +1,9 @@
 terraform {
   cloud {
-    organization = var.organization
+    organization = "alconost-sandbox-orgx"
 
     workspaces {
-      name = var.workspace
+      name = "gh-demo"
     }
   }
 }
