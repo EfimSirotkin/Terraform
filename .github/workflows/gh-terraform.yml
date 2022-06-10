@@ -71,4 +71,3 @@ jobs:
       # terraform plan -destroy
       run: |
        terraform apply -destroy -auto-approve
-@EfimSirotkin
