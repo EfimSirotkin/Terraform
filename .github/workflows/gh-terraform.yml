@@ -21,7 +21,7 @@ jobs:
         shell: bash
     
     # On push to terraform branch, build or change infrastructure according to Terraform configuration files
-    if: github.ref == 'refs/heads/terraform' && github.event_name == 'push'
+    #if: github.ref == 'refs/heads/terraform' && github.event_name == 'push'
 
     steps:
     # Checkout the repository to the GitHub Actions runner
