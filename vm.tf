@@ -1,3 +1,7 @@
+provider "google" {
+  project = var.project
+}
+
 resource "google_compute_instance" "default" {
   name         = "flask-vm"
   machine_type = "f1-micro"

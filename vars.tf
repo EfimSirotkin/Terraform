@@ -5,3 +5,7 @@ variable "organization" {
 variable "workspace" {
   default = "gh-demo"
 }
+
+variable "project" {
+  default = "alconost-sandbox"
+}
