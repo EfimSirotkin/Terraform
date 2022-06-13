@@ -39,10 +39,10 @@ jobs:
    
     - name: 'Creating CloudRun service'
       env:
-        IMAGE_URL: ${REGION}-docker.pkg.dev/${PROJECT}/${REPO}/${IMAGE}:${TAG}
+        IMAGE_URL: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.TAG }}
         PORT: 80
       run: |
-        gcloud run deploy ${SERVICE_NAME} --image=${IMAGE_URL} --port=${PORT} --region=${REGION} --allow-unauthenticated
+        gcloud run deploy ${{ env.SERVICE_NAME }} --image=${{ env.IMAGE_URL }} --port=${{ env.PORT }} --region=${{ env.REGION }} --allow-unauthenticated
 
     - name: 'Creating CloudSQL DB instance'
       env:
