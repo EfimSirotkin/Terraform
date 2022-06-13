@@ -46,13 +46,12 @@ jobs:
 
     - name: 'Creating CloudSQL DB instance'
       env:
-        INSTANCE_NAME: alconost-db-instance-${GITHUB_SHA}
+        INSTANCE_NAME: alconost-db-instance-${{ github.sha }}
         DB_TYPE: MYSQL_8_0
         DB_TIER: db-f1-micro
         ROOT_PASS: ${{ secrets.GCP_DB_ROOT_PASSWORD }}
       run: |
-        gcloud sql instances create ${{ env.INSTANCE_NAME }} --database-version=${{ env.DB_TYPE }} \
-        --tier=${{ env.DB_TIER }} --region=${{ env.REGION }} --root-password=${{ env.ROOT_PASS }}
+        gcloud sql instances create ${{ env.INSTANCE_NAME }} --database-version=${{ env.DB_TYPE }} --tier=${{ env.DB_TIER }} --region=${{ env.REGION }} --root-password=${{ env.ROOT_PASS }}
       
     - name: 'Getting CloudRun service URL'
       run: |
@@ -68,4 +67,4 @@ jobs:
     - name: 'Deleting CloudRun'
       if: always()
       run: |
-        gcloud beta run services delete ${{ env.SERVICE_NAME }} --quiet
+        gcloud beta run services delete ${{ env.SERVICE_NAME }} --region=${{ env.REGION }} --quiet
