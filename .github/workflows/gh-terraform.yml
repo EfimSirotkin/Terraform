@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  gcloud:
+  terraform:
     name: 'Provision GCP'
     runs-on: ubuntu-latest
     environment: production
