@@ -10,40 +10,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  terraform:
+  gcloud:
     name: 'Provision GCP'
     runs-on: ubuntu-latest
     environment: production
+    env:
+      REGION : 'europe-west2'
+      PROJECT : 'alconost-sandbox'
+      REPO : 'nginx'
+      IMAGE : 'nginx'
+      TAG : 'v1'
+      SERVICE_NAME: alconost-cloudrun
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
       run:
         shell: bash
-    
-    # On push to terraform branch, build or change infrastructure according to Terraform configuration files
-    #if: github.ref == 'refs/heads/terraform' && github.event_name == 'push'
-
-    steps:
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform Init
-      run: terraform init
-
-    # # Checks that all Terraform configuration files adhere to a canonical format
-    # - name: Terraform Format
-    #   run: terraform fmt -check
 
     # Setup gcloud CLI
-    - name: 'auth'
+    - name: 'Set up gcloud cli'
       uses: 'google-github-actions/auth@v0'
       with:
         credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
@@ -51,23 +36,34 @@ jobs:
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
    
-    # Generates an execution plan for Terraform
-    - name: Terraform Plan
-      run: terraform plan
+    - name: 'Creating CloudRun service'
+      env:
+        IMAGE_URL: ${REGION}-docker.pkg.dev/${PROJECT}/${REPO}/${IMAGE}:${TAG}
+        PORT: 80
+      run: |
+        gcloud run deploy ${SERVICE_NAME} --image=${IMAGE_URL} --port=${PORT} --region=${REGION} --allow-unauthenticated
 
-    # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". 
-    # See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-    - name: Terraform Apply
-      # If any commit message in your push or the HEAD commit of your PR 
-      # contains the strings <construire> -- then terraform Apply step will run
-      if: "contains(github.event.commits[0].message, '[construire]')"
-      # terraform plan
+    - name: 'Creating CloudSQL DB instance'
+      env:
+        INSTANCE_NAME: alconost-db-instance-${GITHUB_SHA}
+        DB_TYPE: MYSQL_8_0
+        DB_TIER: db-f1-micro
+        ROOT_PASS: ${{ secrets.GCP_DB_ROOT_PASSWORD }}
       run: |
-       terraform apply -auto-approve
-    - name: Terraform Destroy
-      # If any commit message in your push or the HEAD commit of your PR 
-      # contains the strings [detruire] -- then terraform Destry step will run
-      if: "contains(github.event.commits[0].message, '[detruire]')"
-      # terraform plan -destroy
+        gcloud sql instances create ${INSTANCE_NAME} --database-version=${DB_TYPE} \
+        --tier=${DB_TIER} --region=${REGION} --root-password=${ROOT_PASS}
+      
+    - name: 'Getting CloudRun service URL'
       run: |
-       terraform apply -destroy -auto-approve
+        echo ::set-output name=service_url::$(gcloud run services describe ${SERVICE_NAME} --platform-managed --region ${REGION} --format 'value(status.url)')
+        
+    - name: 'Performing tests'
+      run: |
+        echo "Perform some auto-tests"
+        echo "Service URL: ${{ steps.vars.outputs.service_url }}"
+        sleep 300s
+      shell: bash
+
+    - name: 'Deleting CloudRun'
+      run: |
+        gcloud beta run services delete ${SERVICE_NAME} --quiet
