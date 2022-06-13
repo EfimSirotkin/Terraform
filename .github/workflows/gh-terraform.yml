@@ -1,4 +1,4 @@
-name: 'gcloud-ci'
+name: 'gcloud'
 
 on:
   push:
@@ -11,21 +11,21 @@ on:
 
 jobs:
   gcloud:
-    - name: 'Provision GCP'
-      runs-on: ubuntu-latest
-      environment: production
-      env:
-        REGION : 'europe-west2'
-        PROJECT : 'alconost-sandbox'
-        REPO : 'nginx'
-        IMAGE : 'nginx'
-        TAG : 'v1'
-        SERVICE_NAME: alconost-cloudrun
+    name: 'Provision GCP'
+    runs-on: ubuntu-latest
+    environment: production
+    # env:
+    #   REGION : 'europe-west2'
+    #   PROJECT : 'alconost-sandbox'
+    #   REPO : 'nginx'
+    #   IMAGE : 'nginx'
+    #   TAG : 'v1'
+    #   SERVICE_NAME: alconost-cloudrun
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-      defaults:
-        run:
-          shell: bash
+    defaults:
+      run:
+      shell: bash
 
     # Setup gcloud CLI
     - name: 'Set up gcloud cli'
