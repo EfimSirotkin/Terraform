@@ -51,12 +51,12 @@ jobs:
         DB_TIER: db-f1-micro
         ROOT_PASS: ${{ secrets.GCP_DB_ROOT_PASSWORD }}
       run: |
-        gcloud sql instances create ${INSTANCE_NAME} --database-version=${DB_TYPE} \
-        --tier=${DB_TIER} --region=${REGION} --root-password=${ROOT_PASS}
+        gcloud sql instances create ${{ env.INSTANCE_NAME }} --database-version=${{ env.DB_TYPE }} \
+        --tier=${{ env.DB_TIER }} --region=${{ env.REGION }} --root-password=${{ env.ROOT_PASS }}
       
     - name: 'Getting CloudRun service URL'
       run: |
-        echo ::set-output name=service_url::$(gcloud run services describe ${SERVICE_NAME} --platform-managed --region ${REGION} --format 'value(status.url)')
+        echo ::set-output name=service_url::$(gcloud run services describe ${{ env.SERVICE_NAME }} --platform-managed --region ${{ env.REGION }} --format 'value(status.url)')
         
     - name: 'Performing tests'
       run: |
@@ -66,5 +66,6 @@ jobs:
       shell: bash
 
     - name: 'Deleting CloudRun'
+      if: always()
       run: |
-        gcloud beta run services delete ${SERVICE_NAME} --quiet
+        gcloud beta run services delete ${{ env.SERVICE_NAME }} --quiet
