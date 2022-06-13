@@ -21,6 +21,7 @@ jobs:
       IMAGE : 'nginx'
       TAG : 'v1'
       SERVICE_NAME: alconost-cloudrun
+      DB_INSTANCE_NAME: alconost-db-instance-${{ github.sha }}
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -38,6 +39,7 @@ jobs:
       uses: 'google-github-actions/setup-gcloud@v0'
    
     - name: 'Creating CloudRun service'
+      id: cloudrun
       env:
         IMAGE_URL: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.TAG }}
         PORT: 80
@@ -46,14 +48,14 @@ jobs:
 
     - name: 'Creating CloudSQL DB instance'
       env:
-        INSTANCE_NAME: alconost-db-instance-${{ github.sha }}
         DB_TYPE: MYSQL_8_0
         DB_TIER: db-f1-micro
         ROOT_PASS: ${{ secrets.GCP_DB_ROOT_PASSWORD }}
       run: |
-        gcloud sql instances create ${{ env.INSTANCE_NAME }} --database-version=${{ env.DB_TYPE }} --tier=${{ env.DB_TIER }} --region=${{ env.REGION }} --root-password=${{ env.ROOT_PASS }}
+        gcloud sql instances create ${{ env.DB_INSTANCE_NAME }} --database-version=${{ env.DB_TYPE }} --tier=${{ env.DB_TIER }} --region=${{ env.REGION }} --root-password=${{ env.ROOT_PASS }} --async
       
     - name: 'Getting CloudRun service URL'
+      if: steps.cloudrun.outcome == 'success'
       run: |
         echo ::set-output name=service_url::$(gcloud run services describe ${{ env.SERVICE_NAME }} --platform-managed --region ${{ env.REGION }} --format 'value(status.url)')
         
@@ -67,4 +69,9 @@ jobs:
     - name: 'Deleting CloudRun'
       if: always()
       run: |
-        gcloud beta run services delete ${{ env.SERVICE_NAME }} --region=${{ env.REGION }} --quiet
+        gcloud run services delete ${{ env.SERVICE_NAME }} --region=${{ env.REGION }} --quiet
+
+    - name: 'Deleting CloudSQL'
+      if: always()
+      run: |
+        gcloud sql instances delete ${{ env.DB_INSTANCE_NAME }} --async --quiet
