@@ -29,6 +29,10 @@ jobs:
         shell: bash
     
     steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      
     # Setup gcloud CLI
     - name: 'Set up gcloud cli'
       uses: 'google-github-actions/auth@v0'
@@ -57,13 +61,13 @@ jobs:
     - name: 'Getting CloudRun service URL'
       if: steps.cloudrun.outcome == 'success'
       run: |
-        echo ::set-output name=service_url::$(gcloud run services describe ${{ env.SERVICE_NAME }} --platform-managed --region ${{ env.REGION }} --format 'value(status.url)')
+        echo SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} --platform-managed --region ${{ env.REGION }} --format 'value(status.url)') >> $GITHUB_ENV
         
     - name: 'Performing tests'
       run: |
         echo "Perform some auto-tests"
-        echo "Service URL: ${{ steps.vars.outputs.service_url }}"
-        sleep 300s
+        echo "Service URL: ${{ env.SERVICE_URL }}"
+        sleep 20s
       shell: bash
 
     - name: 'Deleting CloudRun'
