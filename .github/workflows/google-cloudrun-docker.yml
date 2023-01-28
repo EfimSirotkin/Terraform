@@ -15,8 +15,8 @@ jobs:
       - uses: 'docker/login-action@v2'
         with:
           registry: gcr.io
-          username: ${{ secrets.GCR_USERNAME }}
-          password: ${{ secrets.GCR_PASSWORD }}
+          username: ${{ secrets.GCP_USERNAME }}
+          password: ${{ secrets.GCP_PASSWORD }}
 
       # customize based on the gcr-cleaner flags
       - uses: 'docker://us-docker.pkg.dev/gcr-cleaner/gcr-cleaner/gcr-cleaner-cli'
