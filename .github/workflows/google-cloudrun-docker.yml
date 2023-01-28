@@ -37,5 +37,5 @@ jobs:
       with:
         args: >-
           -repo=gcr.io/alconost-sandbox/testimage
-          -grace=1h
+          -grace=10m
  
